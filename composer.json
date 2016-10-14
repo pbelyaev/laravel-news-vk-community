@@ -3,7 +3,9 @@
     "description": "LaravelNews VK Community",
     "type": "project",
     "require": {
-        "symfony/console": "^3.1"
+        "symfony/console": "^3.1",
+        "simplepie/simplepie": "^1.4",
+        "guzzlehttp/guzzle": "^6.2"
     },
     "license": "MIT",
     "authors": [
