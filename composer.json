@@ -1,0 +1,20 @@
+{
+    "name": "pbelyaev/laravel-news-vk-community",
+    "description": "LaravelNews VK Community",
+    "type": "project",
+    "require": {
+        "symfony/console": "^3.1",
+        "simplepie/simplepie": "^1.4",
+        "guzzlehttp/guzzle": "^6.2"
+    },
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Pavel Belyaev",
+            "email": "ksyddd@gmail.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": {"LaravelNewsVkCommunity\\": "src/"}
+    }
+}
