@@ -60,7 +60,7 @@ class PostCommand extends Command
             'query' => [
                 'owner_id' => $this->config['vk']['group_id'],
                 'from_group' => 1,
-                'message' => $post['tags'] . " #LaravelNews #Laravel #PHP",
+                'message' => $post['title'] . "\n" . "\n" . $post['tags'] . " #LaravelNews #Laravel #PHP",
                 'attachments' => $post['url'],
                 'access_token' => $this->config['vk']['access_token']
             ]
