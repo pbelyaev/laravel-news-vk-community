@@ -65,7 +65,9 @@ class CheckRssCommand extends Command
 
             if (count($item->get_categories())) {
                 foreach($item->get_categories() as $category) {
-                    $tags[] = sprintf("#%s", preg_replace("/\s*/", "", $category->get_term()));
+                    $category = preg_replace("/[\s\.]*/", "", $category->get_term());
+
+                    $tags[] = sprintf("#%s", mb_strtolower($category));
                 }
             }
 
