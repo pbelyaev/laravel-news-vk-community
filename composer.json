@@ -1,20 +1,24 @@
 {
-    "name": "pbelyaev/laravel-news-vk-community",
-    "description": "LaravelNews VK Community",
-    "type": "project",
-    "require": {
-        "symfony/console": "^3.1",
-        "simplepie/simplepie": "^1.4",
-        "guzzlehttp/guzzle": "^6.2"
-    },
-    "license": "MIT",
-    "authors": [
-        {
-            "name": "Pavel Belyaev",
-            "email": "ksyddd@gmail.com"
-        }
-    ],
-    "autoload": {
-        "psr-4": {"LaravelNewsVkCommunity\\": "src/"}
+  "name": "pbelyaev/laravel-news-vk-community",
+  "description": "LaravelNews VK Community",
+  "type": "project",
+  "require": {
+    "php": "^7.1",
+    "symfony/console": "^4.0",
+    "simplepie/simplepie": "^1.4",
+    "guzzlehttp/guzzle": "^6.2",
+    "symfony/dotenv": "^4.0"
+  },
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Pavel Belyaev",
+      "email": "ksyddd@gmail.com"
     }
+  ],
+  "autoload": {
+    "psr-4": {
+      "LaravelNewsVkCommunity\\": "src/"
+    }
+  }
 }

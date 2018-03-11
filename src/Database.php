@@ -9,82 +9,83 @@ class Database
      */
     private $connect;
 
+    /**
+     * @return void
+     */
     public function __construct()
     {
-        $this->connect = new \PDO("sqlite:laravelnews.sqlite3");
-        $this->connect->setAttribute(
-            \PDO::ATTR_ERRMODE,
-            \PDO::ERRMODE_EXCEPTION
-        );
+        $this->connect = new \PDO('sqlite:laravelnews.sqlite3');
+        $this->connect->setAttribute(\PDO::ATTR_DEFAULT_FETCH_MODE, \PDO::FETCH_ASSOC);
+        $this->connect->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
     }
 
     /**
-     * @return array|bool
+     * @param array $rows
+     * @return array
      */
-    public function getPosts()
+    public function fetchUnpublishedPosts(array $rows = []): array
     {
-        $statement = $this->connect->prepare("SELECT * FROM posts WHERE posted = 0");
-        $statement->execute();
 
-        return $statement->fetchAll(\PDO::FETCH_ASSOC);
+        return $this->connect
+            ->query('SELECT ' . (empty($rows) ? '*' : implode(', ', $rows)) . ' FROM posts WHERE posted = 0')
+            ->fetchAll();
     }
 
     /**
      * @param int $id
-     *
-     * @return bool
+     * @return void
      */
-    public function postWasPublished(int $id)
+    public function flagPostAsPublished(int $id): void
     {
-        $statement = $this->connect->prepare("UPDATE posts SET posted = 1 WHERE id = " . $id);
+        $statement = $this->connect->prepare('UPDATE posts SET posted = 1 WHERE id = :id');
+        $statement->bindParam('id', $id);
         $statement->execute();
-
-        return true;
     }
 
     /**
      * @param string $url
-     *
      * @return bool
      */
-    public function hasPost(string $url = "") : bool
+    public function hasPost(string $url): bool
     {
-        $statement = $this->connect->prepare("SELECT id FROM posts WHERE url = :url");
-        $statement->execute(compact('url'));
-        $row = $statement->fetch(\PDO::FETCH_ASSOC);
+        $statement = $this->connect->prepare('SELECT id FROM posts WHERE url = :url');
+        $statement->bindParam('url', $url);
+        $statement->execute();
+        $row = $statement->fetch();
 
-        return isset($row['id']) && intval($row['id']) > 0;
+        return isset($row['id']) && 0 !== (int)$row['id'];
     }
 
     /**
      * @param string $title
      * @param string $url
      * @param string $tags
-     *
      * @return int
      */
-    public function addPost(string $title = "", string $url = "", string $tags = "#general") : int
+    public function addPost(string $title = '', string $url = '', string $tags = '#general'): int
     {
-        $statement = $this->connect->prepare("INSERT INTO posts(title, url, tags, posted) VALUES (:title, :url, :tags, 0)");
-        $statement->execute(compact('title', 'url', 'tags'));
+        $statement = $this->connect->prepare('INSERT INTO posts(title, url, tags, posted) VALUES (:title, :url, :tags, 0)');
+        $statement->execute(
+            compact('title', 'url', 'tags')
+        );
 
-        return $this->connect->lastInsertId() || 0;
+        return (int)$this->connect->lastInsertId();
     }
 
     /**
-     * Migrate database.
+     * Migrate the database.
      *
-     * @return bool
+     * @return void
      * @throws \Exception
      */
-    public function migrate() : bool
+    public function migrate(): void
     {
         if ($this->hasMigrated()) {
-            throw new \Exception("Migration already has been executed!");
+            throw new \RuntimeException('Migration has been already executed!');
         }
 
         /* Create posts table */
-        $this->connect->query("
+        $this->connect->exec('
             CREATE TABLE `posts` (
                 `id` INTEGER PRIMARY KEY AUTOINCREMENT,
                 `title` TEXT NULL,
@@ -92,31 +93,27 @@ class Database
                 `tags` TEXT NULL,
                 `posted` INTEGER DEFAULT 0
             )
-        ");
-
-        return true;
+        ');
     }
 
     /**
-     * Has already migrated.
-     *
      * @return bool
      */
-    private function hasMigrated()
+    private function hasMigrated(): bool
     {
-        $statement = $this->connect->prepare("
+        $statement = $this->connect->prepare('
             SELECT name 
             FROM sqlite_master 
             WHERE type = :type 
             AND name = :name
-        ");
+        ');
         $statement->execute([
-            'type' => "table",
-            'name' => "posts",
+            'type' => 'table',
+            'name' => 'posts',
         ]);
 
-        $row = $statement->fetch(\PDO::FETCH_ASSOC);
+        $row = $statement->fetch();
 
-        return isset($row['name']) && $row['name'] == "posts";
+        return isset($row['name']) && $row['name'] === 'posts';
     }
 }

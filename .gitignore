@@ -1,6 +1,6 @@
 composer.phar
 /vendor/
 /.idea/
-/config.php
+/.env
 /laravelnews.sqlite3
 /laravelnews.sqlite3-journal

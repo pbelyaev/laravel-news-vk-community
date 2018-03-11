@@ -4,19 +4,27 @@ namespace LaravelNewsVkCommunity\Commands;
 
 use LaravelNewsVkCommunity\Database;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
-class MigrateCommand extends Command
+class UnpublishedPostsCommand extends Command
 {
+    /**
+     * @var Database
+     */
+    protected $database;
+
     /**
      * @return void
      */
     public function configure(): void
     {
         $this
-            ->setName('migration:proceed')
-            ->setDescription('Proceed migration scripts.');
+            ->setName('posts:unpublished')
+            ->setDescription('Shows posts that were not published yet');
+
+        $this->database = new Database;
     }
 
     /**
@@ -26,8 +34,11 @@ class MigrateCommand extends Command
      */
     public function execute(InputInterface $input, OutputInterface $output): void
     {
-        (new Database)->migrate();
+        $posts = $this->database->fetchUnpublishedPosts(['title', 'url', 'tags']);
 
-        $output->writeln('Migrated');
+        $table = new Table($output);
+        $table->setHeaders(array_keys($posts[0]));
+        $table->setRows($posts);
+        $table->render();
     }
 }

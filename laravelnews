@@ -1,17 +1,13 @@
 #!/usr/bin/env php
 <?php
 
-ini_set('display_errors', 1);
-error_reporting(E_ALL);
+require __DIR__ . '/vendor/autoload.php';
 
-require __DIR__.'/vendor/autoload.php';
+(new \Symfony\Component\Dotenv\Dotenv)->load(__DIR__ . '/.env');
 
-use Symfony\Component\Console\Application;
-
-$application = new Application();
-
+$application = new Symfony\Component\Console\Application();
 $application->add(new \LaravelNewsVkCommunity\Commands\CheckRssCommand);
 $application->add(new \LaravelNewsVkCommunity\Commands\MigrateCommand);
+$application->add(new \LaravelNewsVkCommunity\Commands\UnpublishedPostsCommand);
 $application->add(new \LaravelNewsVkCommunity\Commands\PostCommand);
-
 $application->run();

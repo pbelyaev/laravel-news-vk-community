@@ -26,69 +26,104 @@ class CheckRssCommand extends Command
     private $added = 0;
 
     /**
-     * Configure.
-     *
      * @return void
      */
-    public function configure()
+    public function configure(): void
     {
         $this
-            ->setName("rss:check")
+            ->setName('rss:check')
             ->setDescription("Check LaravelNews's RSS feed.");
 
         $this->database = new Database;
         $this->feed = new SimplePie();
-        $this->feed->set_feed_url("http://feed.laravel-news.com/");
+        $this->feed->set_feed_url('http://feed.laravel-news.com/');
+        $this->feed->enable_cache(false);
     }
 
     /**
      * @param InputInterface $input
      * @param OutputInterface $output
-     *
      * @return void
      * @throws \Exception
      */
-    public function execute(InputInterface $input, OutputInterface $output)
+    public function execute(InputInterface $input, OutputInterface $output): void
     {
         $this->feed->init();
 
-        if (!$this->feed->get_items()) {
-            throw new \Exception("Something went wrong...");
-        }
-
-        $toPost = [];
-
-        foreach ($this->feed->get_items() as $item) {
-            $title = $item->get_title();
-            $url = $item->get_links()[0];
-            $tags = [];
-
-            if (count($item->get_categories())) {
-                foreach($item->get_categories() as $category) {
-                    $category = preg_replace("/[\s\.]*/", "", $category->get_term());
-
-                    $tags[] = sprintf("#%s", $category);
-                }
+        if (0 !== $this->feed->get_item_quantity()) {
+            foreach ($this->feed->get_items() as $item) {
+                $this->addPost(
+                    $this->generatePostFromItem($item)
+                );
             }
 
-            $toPost[] = compact('title', 'url', 'tags');
-        }
-
-        if (count($toPost) > 0) {
-            $toPost = array_reverse($toPost);
-
-            foreach($toPost as $post) {
-                if (!$this->database->hasPost($post['url'])) {
-                    $this->database->addPost($post['title'], $post['url'], implode(" ", $post['tags']));
-                    $this->added++;
-                }
-            }
-        }
-
-        if ($this->added > 0) {
-            $output->writeln(sprintf("There was/were %d new item(s)", $this->added));
+            $this->displayOutput($output);
         } else {
-            $output->writeln("There is nothing new since the last check");
+            throw new \RuntimeException('There are no items in RSS feed');
         }
+    }
+
+    /**
+     * @param \SimplePie_Item $item
+     * @return array
+     */
+    private function generatePostFromItem(\SimplePie_Item $item): array
+    {
+        $title = $item->get_title();
+        $url = $item->get_links()[0];
+        $tags = [];
+
+        if (!empty($item->get_categories())) {
+            $tags = $this->extractHashTagsFromCategories($item);
+        }
+
+        return compact('url', 'title', 'tags');
+    }
+
+    /**
+     * @param \SimplePie_Item $item
+     * @return array
+     */
+    private function extractHashTagsFromCategories(\SimplePie_Item $item): array
+    {
+        $tags = [];
+
+        foreach($item->get_categories() as $category) {
+            $tags[] = '#' . preg_replace("/[\s\.]*/", '', $category->get_term());
+        }
+
+        return $tags;
+    }
+
+    /**
+     * @param array $post
+     * @return void
+     */
+    private function addPost(array $post): void
+    {
+        if (!$this->database->hasPost($post['url'])) {
+            $this->database->addPost($post['title'], $post['url'], implode(' ', $post['tags']));
+            $this->added++;
+        }
+    }
+
+    /**
+     * @param OutputInterface $output
+     * @return void
+     */
+    private function displayOutput(OutputInterface $output): void
+    {
+        $message = 'There is nothing new since the last check';
+
+        if (0 !== $this->added) {
+            $addedMoreThanOne = $this->added > 1;
+            $message = sprintf(
+                '%d %s %s added to the database',
+                $this->added, ($addedMoreThanOne ? 'items' : 'item'),
+                ($addedMoreThanOne ? 'were' : 'was')
+            );
+        }
+
+        $output->writeln($message);
     }
 }
