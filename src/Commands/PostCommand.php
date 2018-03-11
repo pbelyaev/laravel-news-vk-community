@@ -58,6 +58,7 @@ class PostCommand extends Command
     {
         $request = $this->guzzle->get("https://api.vk.com/method/wall.post", [
             'query' => [
+                'v' => '5.71',
                 'owner_id' => $this->config['vk']['group_id'],
                 'from_group' => 1,
                 'message' => $post['title'] . "\n" . "\n" . $post['tags'] . " #LaravelNews #Laravel #PHP",
